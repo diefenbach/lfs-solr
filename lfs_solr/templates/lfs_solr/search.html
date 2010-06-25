@@ -122,12 +122,12 @@
 
                 <div class="product-image1 span-4">
 
-                    {# <a href="{{product.get_image.url_200x200}}" class="jqzoom" style="" onclick="window.location='{% url lfs.catalog.views.product_view product.slug %}'"> #}
-                    {#                             <img src="{{product.get_image.url_200x200}}" #}
-                    {#             title="{{product.get_name}}" #}
-                    {#             alt="{{product.get_name}}" #}
-                    {#             width="120px" height="120px"> #}
-                    {# </a> #}
+                    <a href="{{product.get_image.url_200x200}}" class="jqzoom" style="" onclick="window.location='{% url lfs.catalog.views.product_view product.slug %}'">
+                                                <img src="{{product.get_image.url_200x200}}"
+                                title="{{product.get_name}}"
+                                alt="{{product.get_name}}"
+                                width="120px" height="120px">
+                    </a>
                 </div>
                 <div class="product-description span-10">
                     <h3>{% product_manufacturer %} {{ product.get_name|safe }}</h3>
