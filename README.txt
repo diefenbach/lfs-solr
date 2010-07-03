@@ -10,6 +10,13 @@ For the latest documentation please visit:
 
 * http://packages.python.org/lfs-solr/
 
+Source code
+===========
+
+You will find the source code on bitbucket:
+
+* http://bitbucket.org/diefenbach/lfs-solr/
+
 Changes
 =======
 
