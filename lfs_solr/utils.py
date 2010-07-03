@@ -5,6 +5,7 @@ from pysolr import Solr
 from lfs.catalog.models import Product
 from lfs.catalog.settings import STANDARD_PRODUCT
 from lfs.catalog.settings import PRODUCT_WITH_VARIANTS
+from lfs.catalog.settings import CONFIGURABLE_PRODUCT
 
 try:
     SOLR_ADDRESS = settings.SOLR_ADDRESS
@@ -32,7 +33,7 @@ def index_all_products():
     """Indexes all products.
     """
     products = Product.objects.filter(
-        active=True, sub_type__in = (STANDARD_PRODUCT, PRODUCT_WITH_VARIANTS))
+        active=True, sub_type__in = (STANDARD_PRODUCT, PRODUCT_WITH_VARIANTS, CONFIGURABLE_PRODUCT))
 
     _index_products(products, delete=True)
 
