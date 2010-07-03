@@ -129,7 +129,7 @@ def livesearch(request, template_name="lfs_solr/livesearch_results.html"):
 
     return HttpResponse(result)
 
-def search(request, template_name="lfs_solr/search.html"):
+def search(request, template_name="lfs_solr/search_results.html"):
     """Provides form and result for search via Solr.
     """
     if request.GET.get("reset"):
