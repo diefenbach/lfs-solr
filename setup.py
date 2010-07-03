@@ -11,7 +11,7 @@ setup(name='lfs-solr',
       description='Solr integration for LFC',
       long_description=README,
       classifiers=[
-          'Development Status :: 5 - Alpha',
+          'Development Status :: 4 - Beta',
           'Environment :: Web Environment',
           'Framework :: Django',
           'License :: OSI Approved :: BSD License',
