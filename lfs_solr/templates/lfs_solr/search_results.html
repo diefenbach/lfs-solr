@@ -11,13 +11,57 @@
     {% breadcrumbs _("Search results") %}
 {% endblock %}
 
-{% block wrapper %}
+{% block right-slot-wrapper %}
+
+{% endblock %}
+{% block left-slot %}
+    <div class="portlet">
+
+        {% if categories %}
+            <div class="portlet-header" style="padding-top:4px">
+                {% trans "Categories" %}
+                {% if categories_reset %}
+                    <a href="{% url solr_reset_field %}?q={{ q }}&amp;field=categories">[X]</a>
+                {% endif %}
+            </div>
+            {% for category in categories %}
+                <div style="padding: 2px 0">
+                    <a href='{% url solr_set_filter %}?q={{ q }}&amp;field=categories&amp;value={{ category.url|urlencode }}'>{{ category.name }} ({{ category.amount }})</a>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if manufacturers %}
+            <div class="portlet-header" style="margin-top:8px">
+                {% trans "Manufacturers" %}
+                {% if manufacturer_reset %}
+                    <a href="{% url solr_reset_field %}?q={{ q }}&amp;field=manufacturer">[X]</a>
+                {% endif %}
+            </div>
+            {% for manufacturer in manufacturers %}
+                <div style="padding: 2px 0">
+                    <a href='{% url solr_set_filter %}?q={{ q }}&amp;field=manufacturer&amp;value={{ manufacturer.url|urlencode }}'>{{ manufacturer.name }} ({{ manufacturer.amount }})</a>
+                </div>
+            {% endfor %}
+        {% endif %}
+        <div style="padding-top: 10px; font-weight:bold; text-align:right">
+            <a href="{% url solr_reset_filter %}?q={{ q }}">Alle Zur&uuml;cksetzen</a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
 
     <h1 class="first-heading">{% trans 'Search results' %}</h1>
 
     <label for="search">{% trans 'Search' %}:</label>
     <form action="{% url lfs_search %}"
           class="search-results-form">
+
+        <input type="hidden"
+               name="reset"
+               value="1" />
+
         <input id="search-input"
                type="text"
                name="q" />
@@ -35,37 +79,63 @@
 
         {% autopaginate products 10 %}
         {% paginate %}
-        {% sorting %}
 
         <br clear="both">
 
+        <div class="span-18 append-bottom right last">
+            
+            <form action="{% url solr_set_sorting %}">
+                <div class="sorting">
+                    <select name="sorting"
+                            onchange="this.form.submit()">
+                        <option value=""
+                            {% ifequal "best" sorting %}selected="selected"{% endifequal %}>{% trans 'Bestes Ergebnis' %}</option>
+                        <option value="name asc"
+                            {% ifequal "name asc" sorting %}selected="selected"{% endifequal %}>{% trans 'Name ascending' %}</option>
+                        <option value="name desc"
+                            {% ifequal "name desc" sorting %}selected="selected"{% endifequal %}>{% trans 'Name descending' %}</option>
+                        <option value="price asc"
+                            {% ifequal "price asc" sorting %}selected="selected"{% endifequal %}>{% trans 'Price ascending' %}</option>
+                        <option value="price desc"
+                            {% ifequal "price desc" sorting %}selected="selected"{% endifequal %}>{% trans 'Price descending' %}</option>
+                    </select>
+                    <input type="hidden" name="q" value="{{ q }}" />
+                </div>
+            </form>
+        </div>
+
+        <br clear="both">
+
+
         <div class="container header append-bottom">
-            <div class="span-5">
+            <div class="span-4">
                 {% trans 'Image' %}
             </div>
-            <div class="span-15">
+            <div class="span-9">
                 {% trans 'Product' %}
             </div>
-            <div class="span-4 last number">
+            <div class="span-5 last number">
                 {% trans 'Price' %}
             </div>
         </div>
 
         {% for product in products %}
             <div class="container append-bottom">
-                <div class="span-5">
+                <div class="span-4">
                     <a href="{{ product.get_absolute_url }}">
                         <img src="{{ product.get_image.url_100x100 }}"
                              alt="{{ product.get_name }}"
-                             title="{{ product.get_name }}"
-                             height="100px" />
+                             title="{{ product.get_name }}" />
                     </a>
                 </div>
 
-                <div class="span-15 text">
+                <div class="span-9 text">
                     <a href="{{ product.get_absolute_url }}">
                         {{ product.get_name }}
                     </a>
+                    <div>
+                        {{ product.short_description|safe }}
+                    </div>
                     {% for property in product.get_displayed_properties %}
                         <div>
                             {{ property.title }} : {{ property.value }} {{ property.unit|safe }}
@@ -73,7 +143,7 @@
                     {% endfor %}
                 </div>
 
-                <div class="span-4 number last">
+                <div class="span-5 number last">
                     <div class="product-price">
                         {% if product.for_sale %}
                            <span class="for-sale-standard-price">{{ product.get_standard_price|currency }}</span>

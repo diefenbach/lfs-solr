@@ -17,6 +17,9 @@
                     <a href="{{ product.get_absolute_url }}">
                         {{ product.get_name }} 
                     </a>
+                    <div>
+                        {{ product.short_description|safe }}
+                    </div>
                     {% for property in product.get_displayed_properties %}
                         <div>
                             {{ property.title }} : {{ property.value }} {{ property.unit|safe }}
