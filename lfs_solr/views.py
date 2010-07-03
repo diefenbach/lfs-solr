@@ -132,7 +132,7 @@ def livesearch(request, template_name="lfs_solr/livesearch_results.html"):
 def search(request, template_name="lfs_solr/search_results.html"):
     """Provides form and result for search via Solr.
     """
-    if request.GET.get("reset"):
+    if request.GET.get("reset") or request.GET.get("livesearch"):
         try:
            del request.session["solr_filter"]
         except KeyError:
