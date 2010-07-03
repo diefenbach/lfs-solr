@@ -8,7 +8,7 @@ README = open(os.path.join(here, 'README.txt')).read()
 
 setup(name='lfs-solr',
       version=version,
-      description='Solr integration for LFC',
+      description='Solr integration for LFS',
       long_description=README,
       classifiers=[
           'Development Status :: 4 - Beta',
