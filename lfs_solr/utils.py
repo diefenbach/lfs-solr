@@ -21,14 +21,15 @@ def index_product(product):
         except AttributeError:
             return
 
-    _index_products([product])
+    if product.active:
+        _index_products([product])
 
 def delete_product(product):
     """Deletes passed product from index.
     """
     conn = Solr(SOLR_ADDRESS)
     conn.delete(id=product.id)
-    
+
 def index_all_products():
     """Indexes all products.
     """
