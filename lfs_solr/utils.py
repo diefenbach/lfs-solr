@@ -21,7 +21,7 @@ def index_product(product):
         except AttributeError:
             return
 
-    if product.active:
+    if product and product.active:
         _index_products([product])
 
 def delete_product(product):
