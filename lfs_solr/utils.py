@@ -10,9 +10,13 @@ from lfs.catalog.settings import CONFIGURABLE_PRODUCT
 
 try:
     SOLR_ADDRESS = settings.SOLR_ADDRESS
+except:
+    from lfs_solr.settings import SOLR_ADDRESS
+
+try:
     SOLR_ENABLED = settings.SOLR_ENABLED
 except:
-    from lfs_solr.settings import SOLR_ADDRESS, SOLR_ENABLED
+    from lfs_solr.settings import SOLR_ENABLED
 
 
 class SolrConfigurationException(Exception):
