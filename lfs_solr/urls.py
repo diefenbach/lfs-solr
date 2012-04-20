@@ -1,5 +1,5 @@
 # django imports
-from django.conf.urls.defaults import *
+from django.conf.urls.defaults import patterns, url
 
 urlpatterns = patterns('lfs_solr.views',
     url(r'^search', "search", name="solr_search"),

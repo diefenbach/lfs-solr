@@ -1,7 +1,6 @@
 # coding: utf-8
 
 # django imports
-from django.conf import settings
 from django.contrib.auth.decorators import permission_required
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
@@ -11,18 +10,13 @@ from django.template.loader import render_to_string
 from django.template import RequestContext
 from django.utils import simplejson
 
-# pysolr imports
-from pysolr import Solr
-
 # lfs imports
 from lfs.catalog.models import Product
+from lfs.search import views as lfssearch_views
 
-# lfs_solr
-
-try:
-    SOLR_ADDRESS = settings.SOLR_ADDRESS
-except:
-    from lfs_solr.settings import SOLR_ADDRESS
+# lfs_solr imports
+from lfs_solr.utils import _get_solr_connection
+from lfs_solr.utils import SOLR_ENABLED
 
 
 @permission_required("manage_shop", login_url="/login/")
@@ -100,6 +94,9 @@ def set_sorting(request):
 def livesearch(request, template_name="lfs_solr/livesearch_results.html"):
     """Renders the results for the live search.
     """
+    if not SOLR_ENABLED:
+        return lfssearch_views.livesearch(request, template_name)
+
     rows = 10
     q = request.GET.get("q", "")
 
@@ -108,7 +105,7 @@ def livesearch(request, template_name="lfs_solr/livesearch_results.html"):
             "state": "failure",
         })
     else:
-        conn = Solr(SOLR_ADDRESS)
+        conn = _get_solr_connection()
 
         params = {
           'rows': rows,
@@ -139,6 +136,9 @@ def livesearch(request, template_name="lfs_solr/livesearch_results.html"):
 def search(request, template_name="lfs_solr/search_results.html"):
     """Provides form and result for search via Solr.
     """
+    if not SOLR_ENABLED:
+        return lfssearch_views.search(request, template_name)
+
     if request.GET.get("reset") or request.GET.get("livesearch"):
         try:
             del request.session["solr_filter"]
@@ -154,7 +154,7 @@ def search(request, template_name="lfs_solr/search_results.html"):
         start = 0
 
     if q:
-        conn = Solr(SOLR_ADDRESS)
+        conn = _get_solr_connection()
 
         params = {
           'facet': 'on',
