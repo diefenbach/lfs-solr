@@ -94,9 +94,7 @@ def set_sorting(request):
 def livesearch(request, template_name="lfs_solr/livesearch_results.html"):
     """Renders the results for the live search.
     """
-    if not SOLR_ENABLED:
-        return lfssearch_views.livesearch(request, template_name)
-
+    # if not SOLR_ENABLED, urls.py does not call this view
     rows = 10
     q = request.GET.get("q", "")
 
@@ -136,9 +134,7 @@ def livesearch(request, template_name="lfs_solr/livesearch_results.html"):
 def search(request, template_name="lfs_solr/search_results.html"):
     """Provides form and result for search via Solr.
     """
-    if not SOLR_ENABLED:
-        return lfssearch_views.search(request, template_name)
-
+    # if not SOLR_ENABLED, urls.py does not call this view
     if request.GET.get("reset") or request.GET.get("livesearch"):
         try:
             del request.session["solr_filter"]
