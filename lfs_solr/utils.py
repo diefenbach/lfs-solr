@@ -1,3 +1,4 @@
+from django.conf import settings
 # pysolr imports
 from pysolr import Solr
 
@@ -9,7 +10,7 @@ from lfs.catalog.settings import CONFIGURABLE_PRODUCT
 
 try:
     SOLR_ADDRESS = settings.SOLR_ADDRESS
-except:
+except AttributeError:
     from lfs_solr.settings import SOLR_ADDRESS
 
 def index_product(product):
@@ -67,10 +68,17 @@ def _index_products(products, delete=False):
         else:
             manufacturer_name = ""
 
+        try:
+            # lfs 0.6+
+            price = product.get_price(request=None)
+        except TypeError:  # TypeError - unexpected argument
+            # lfs 0.5
+            price = product.get_price()
+
         temp.append({
             "id" : product.id,
             "name" : product.get_name(),
-            "price" : product.get_price(),
+            "price" : price,
             "categories" : categories,
             "keywords" : product.get_meta_keywords(),
             "manufacturer" : manufacturer_name,
