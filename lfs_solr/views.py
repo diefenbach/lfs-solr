@@ -24,6 +24,7 @@ try:
 except:
     from lfs_solr.settings import SOLR_ADDRESS
 
+
 @permission_required("manage_shop", login_url="/login/")
 def index_products(request):
     """Indexes full all products.
@@ -32,6 +33,7 @@ def index_products(request):
     index_all_products()
 
     return HttpResponse("Done!")
+
 
 def reset_field(request):
     """Resets filter for given field.
@@ -48,16 +50,18 @@ def reset_field(request):
 
     return HttpResponseRedirect(reverse("solr_search") + "?q=" + q)
 
+
 def reset_filter(request):
     """Resets all filters.
     """
     q = request.GET.get("q")
     try:
-       del request.session["solr_filter"]
+        del request.session["solr_filter"]
     except KeyError:
         pass
 
     return HttpResponseRedirect(reverse("solr_search") + "?q=" + q)
+
 
 def set_filter(request):
     """Saves the filter for given field to current session.
@@ -72,8 +76,9 @@ def set_filter(request):
     solr_filter = request.session["solr_filter"]
     solr_filter[field] = value
 
-    request.session["solr_filter"]  = solr_filter
+    request.session["solr_filter"] = solr_filter
     return HttpResponseRedirect(reverse("solr_search") + "?q=" + q)
+
 
 def set_sorting(request):
     """Saves the sorting to current session.
@@ -91,6 +96,7 @@ def set_sorting(request):
 
     return HttpResponseRedirect(reverse("solr_search") + "?q=" + q)
 
+
 def livesearch(request, template_name="lfs_solr/livesearch_results.html"):
     """Renders the results for the live search.
     """
@@ -99,13 +105,13 @@ def livesearch(request, template_name="lfs_solr/livesearch_results.html"):
 
     if q == "":
         result = simplejson.dumps({
-            "state" : "failure",
+            "state": "failure",
         })
     else:
         conn = Solr(SOLR_ADDRESS)
 
         params = {
-          'rows' : rows,
+          'rows': rows,
         }
 
         results = conn.search(q.lower(), **params)
@@ -117,24 +123,25 @@ def livesearch(request, template_name="lfs_solr/livesearch_results.html"):
             products.append(product)
 
         products = render_to_string(template_name, RequestContext(request, {
-            "products" : products,
-            "q" : q,
-            "total" : results.hits,
+            "products": products,
+            "q": q,
+            "total": results.hits,
         }))
 
         result = simplejson.dumps({
-            "state" : "success",
-            "products" : products,
+            "state": "success",
+            "products": products,
         })
 
     return HttpResponse(result)
+
 
 def search(request, template_name="lfs_solr/search_results.html"):
     """Provides form and result for search via Solr.
     """
     if request.GET.get("reset") or request.GET.get("livesearch"):
         try:
-           del request.session["solr_filter"]
+            del request.session["solr_filter"]
         except KeyError:
             pass
 
@@ -152,9 +159,9 @@ def search(request, template_name="lfs_solr/search_results.html"):
         params = {
           'facet': 'on',
           'facet.field': ['categories', 'manufacturer'],
-          'facet.mincount' : 1,
-          'rows' : rows,
-          "start" : start,
+          'facet.mincount': 1,
+          'rows': rows,
+          "start": start,
         }
 
         # Sorting
@@ -183,30 +190,30 @@ def search(request, template_name="lfs_solr/search_results.html"):
         categories = []
         temp = results.facets["facet_fields"]["categories"]
         for i in range(1, len(temp), 2):
-            name = temp[i-1]
+            name = temp[i - 1]
             if name.find(" "):
                 url = '"%s"' % name
             else:
                 url = name
             categories.append({
-                "url" : url,
-                "name" : name,
-                "amount" : temp[i],
+                "url": url,
+                "name": name,
+                "amount": temp[i],
             })
 
         manufacturers = []
         temp = results.facets["facet_fields"]["manufacturer"]
         for i in range(1, len(temp), 2):
-            name = temp[i-1]
+            name = temp[i - 1]
             if name:
                 if name.find(" "):
                     url = '"%s"' % name
                 else:
                     url = name
                 manufacturers.append({
-                    "url" : url,
-                    "name" : name,
-                    "amount" : temp[i],
+                    "url": url,
+                    "name": name,
+                    "amount": temp[i],
                 })
 
         # Pagination
@@ -217,7 +224,7 @@ def search(request, template_name="lfs_solr/search_results.html"):
             display_next = False
             next_start = None
 
-        if start-rows >= 0:
+        if start - rows >= 0:
             display_previous = True
             previous_start = start - rows
         else:
@@ -225,20 +232,20 @@ def search(request, template_name="lfs_solr/search_results.html"):
             previous_start = None
 
         return render_to_response(template_name, RequestContext(request, {
-            "products" : products,
-            "results" : results,
-            "categories" : categories,
-            "manufacturers" : manufacturers,
-            "categories_reset" : "categories" in request.session.get("solr_filter", []),
-            "manufacturer_reset" : "manufacturer" in request.session.get("solr_filter", []),
-            "total" : results.hits,
-            "display_next" : display_next,
-            "next_start" : next_start,
-            "previous_start" : previous_start,
-            "display_next" : display_next,
-            "display_previous" : display_previous,
-            "q" : q,
-            "sorting" : sorting,
+            "products": products,
+            "results": results,
+            "categories": categories,
+            "manufacturers": manufacturers,
+            "categories_reset": "categories" in request.session.get("solr_filter", []),
+            "manufacturer_reset": "manufacturer" in request.session.get("solr_filter", []),
+            "total": results.hits,
+            "display_next": display_next,
+            "next_start": next_start,
+            "previous_start": previous_start,
+            "display_next": display_next,
+            "display_previous": display_previous,
+            "q": q,
+            "sorting": sorting,
         }))
     else:
         return render_to_response(template_name, RequestContext(request, {}))

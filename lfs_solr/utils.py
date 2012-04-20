@@ -13,6 +13,7 @@ try:
 except AttributeError:
     from lfs_solr.settings import SOLR_ADDRESS
 
+
 def index_product(product):
     """Indexes passed product.
     """
@@ -25,19 +26,22 @@ def index_product(product):
     if product and product.active:
         _index_products([product])
 
+
 def delete_product(product):
     """Deletes passed product from index.
     """
     conn = Solr(SOLR_ADDRESS)
     conn.delete(id=product.id)
 
+
 def index_all_products():
     """Indexes all products.
     """
     products = Product.objects.filter(
-        active=True, sub_type__in = (STANDARD_PRODUCT, PRODUCT_WITH_VARIANTS, CONFIGURABLE_PRODUCT))
+        active=True, sub_type__in=(STANDARD_PRODUCT, PRODUCT_WITH_VARIANTS, CONFIGURABLE_PRODUCT))
 
     _index_products(products, delete=True)
+
 
 def _index_products(products, delete=False):
     """Indexes given products.
@@ -76,14 +80,14 @@ def _index_products(products, delete=False):
             price = product.get_price()
 
         temp.append({
-            "id" : product.id,
-            "name" : product.get_name(),
-            "price" : price,
-            "categories" : categories,
-            "keywords" : product.get_meta_keywords(),
-            "manufacturer" : manufacturer_name,
-            "sku_manufacturer" : product.sku_manufacturer,
-            "description" : product.description,
+            "id": product.id,
+            "name": product.get_name(),
+            "price": price,
+            "categories": categories,
+            "keywords": product.get_meta_keywords(),
+            "manufacturer": manufacturer_name,
+            "sku_manufacturer": product.sku_manufacturer,
+            "description": product.description,
         })
 
     conn.add(temp)
