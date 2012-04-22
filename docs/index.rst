@@ -20,6 +20,9 @@ To use lfs_solr you need the following prerequisites:
 
 * `Solr <http://lucene.apache.org/solr/>`_.
   Please see http://lucene.apache.org/solr/tutorial.html for more.
+  If you don't have a SOLR instance yet, you can use provided zc.buildout 
+  example configuration file to generate new Solr instance including
+  the schema.xml.
 
 * `LFS <http://pypi.python.org/pypi/django-lfs/>`_.
   Please see http://packages.python.org/django-lfs/introduction/installation.html
@@ -45,7 +48,11 @@ Installation
         "...",
     )
 
-3. Add lfs_solr's urls to your project's url.py. Make sure that they are before
+3. Setup SOLR_ADDRESS to point to your Solr server. It is set to
+   http://127.0.0.1:8983/solr/ by default. You can also set SOLR_ENABLED to
+   False if you want to disable Solr integration (eg. for development instance).
+
+4. Add lfs_solr's urls to your project's url.py. Make sure that they are before
    LFS' urls::
 
     urlpatterns = patterns("",
@@ -54,11 +61,12 @@ Installation
         ...
     )
 
-4. Put the provided schema.xml to your Solr conf directory and start Solr.
+5. If you are not using buildout to generate Solr instance, put the provided 
+   schema.xml to your Solr conf directory. In any case start Solr.
 
-5. Start your LFS instance
+7. Start your LFS instance
 
-6. Visit following URL to index your products (this must be done only once)::
+7. Visit following URL to index your products (this must be done only once)::
 
     http://<your-domain>/index-products
 
