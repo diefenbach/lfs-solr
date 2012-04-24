@@ -9,6 +9,7 @@ from django.shortcuts import render_to_response
 from django.template.loader import render_to_string
 from django.template import RequestContext
 from django.utils import simplejson
+from django.core.paginator import Paginator, Page
 
 # lfs imports
 from lfs.catalog.models import Product
@@ -17,6 +18,21 @@ from lfs.search import views as lfssearch_views
 # lfs_solr imports
 from lfs_solr.utils import _get_solr_connection
 from lfs_solr.utils import SOLR_ENABLED
+
+
+class SolrResults(object):
+    def __init__(self, objects, total, per_page):
+        self._total = total
+        self.objects = objects
+        self.per_page = per_page
+
+    def __len__(self):
+        return self._total
+
+    def __getitem__(self, index):
+        # since there is eg. 10 items in the list only,
+        # we return particular item as it was on correct position
+        return self.objects[index % self.per_page]
 
 
 @permission_required("manage_shop", login_url="/login/")
@@ -74,23 +90,6 @@ def set_filter(request):
     return HttpResponseRedirect(reverse("solr_search") + "?q=" + q)
 
 
-def set_sorting(request):
-    """Saves the sorting to current session.
-    """
-    q = request.GET.get("q")
-    sorting = request.GET.get("sorting")
-
-    if sorting:
-        request.session["solr_sorting"] = sorting
-    else:
-        try:
-            del request.session["solr_sorting"]
-        except KeyError:
-            pass
-
-    return HttpResponseRedirect(reverse("solr_search") + "?q=" + q)
-
-
 def livesearch(request, template_name="lfs/search/livesearch_results.html"):
     """Renders the results for the live search.
     """
@@ -145,9 +144,9 @@ def search(request, template_name="lfs/search/search_results.html"):
     q = request.GET.get("q")
 
     try:
-        start = int(request.GET.get("start", 0))
+        page = int(request.GET.get("page", 1))
     except ValueError:
-        start = 0
+        page = 1
 
     if q:
         conn = _get_solr_connection()
@@ -157,13 +156,17 @@ def search(request, template_name="lfs/search/search_results.html"):
           'facet.field': ['categories', 'manufacturer'],
           'facet.mincount': 1,
           'rows': rows,
-          "start": start,
+          "start": (page - 1) * rows,
         }
 
         # Sorting
-        sorting = request.session.get("solr_sorting")
+        sorting = request.session.get("sorting")
         if sorting:
-            params["sort"] = sorting
+            # check validity of sort param. The session may contain old non-solr value
+            if sorting.startswith('-') or ' ' not in sorting:
+                del request.session['sorting']
+            else:
+                params["sort"] = sorting
 
         if request.session.has_key("solr_filter"):
             params["fq"] = []
@@ -181,6 +184,8 @@ def search(request, template_name="lfs/search/search_results.html"):
                 pass
             else:
                 products.append(product)
+
+        fake_results = SolrResults(products, results.hits, rows)
 
         # Facets
         categories = []
@@ -212,20 +217,8 @@ def search(request, template_name="lfs/search/search_results.html"):
                     "amount": temp[i],
                 })
 
-        # Pagination
-        if start + rows < results.hits:
-            display_next = True
-            next_start = start + rows
-        else:
-            display_next = False
-            next_start = None
-
-        if start - rows >= 0:
-            display_previous = True
-            previous_start = start - rows
-        else:
-            display_previous = False
-            previous_start = None
+        paginator = Paginator(fake_results, rows)
+        page_obj = Page(fake_results, page, paginator)
 
         return render_to_response(template_name, RequestContext(request, {
             "products": products,
@@ -235,13 +228,10 @@ def search(request, template_name="lfs/search/search_results.html"):
             "categories_reset": "categories" in request.session.get("solr_filter", []),
             "manufacturer_reset": "manufacturer" in request.session.get("solr_filter", []),
             "total": results.hits,
-            "display_next": display_next,
-            "next_start": next_start,
-            "previous_start": previous_start,
-            "display_next": display_next,
-            "display_previous": display_previous,
             "q": q,
             "sorting": sorting,
+            'paginator': paginator,
+            'page_obj': page_obj,
         }))
     else:
         return render_to_response(template_name, RequestContext(request, {}))
