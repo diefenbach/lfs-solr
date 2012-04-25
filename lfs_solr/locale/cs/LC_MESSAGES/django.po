@@ -1,0 +1,42 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: lfs_solr\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-04-25 13:09+0200\n"
+"PO-Revision-Date: 2012-04-25 13:11+0100\n"
+"Last-Translator: Radim Novotny <novotny.radim@gmail.com>\n"
+"Language-Team: Czech <info@dms4u.cz>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2\n"
+
+#: templates/lfs/catalog/sorting.html:9
+msgid "Best result"
+msgstr "Nejlepší shoda"
+
+#: templates/lfs/catalog/sorting.html:11
+msgid "Price ascending"
+msgstr "Cena vzestupně"
+
+#: templates/lfs/catalog/sorting.html:13
+msgid "Price descending"
+msgstr "Cena sestupně"
+
+#: templates/lfs/catalog/sorting.html:15
+msgid "Name ascending"
+msgstr "Název A-Z"
+
+#: templates/lfs/catalog/sorting.html:17
+msgid "Name descending"
+msgstr "Název Z-A"
+
+#: templates/lfs/catalog/sorting.html:20
+msgid "Go!"
+msgstr "Provést"
+
