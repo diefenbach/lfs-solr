@@ -5,9 +5,8 @@
         {% csrf_token %}
         <select name="sorting"
                 onchange="this.form.submit()">
-{#             <option value="best"
-                {% ifequal "best" current %}selected="selected"{% endifequal %}>{% trans 'Best result' %}</option>
- #}
+             <!-- option value="best"
+                {% ifequal "best" current %}selected="selected"{% endifequal %}>{% trans 'Best result' %}</option> -->
             <option value=""
                 {% ifequal "" current %}selected="selected"{% endifequal %}>{% trans 'Default' %}</option>
             <option value="price asc"
