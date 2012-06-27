@@ -1,6 +1,11 @@
 # django imports
 from django.conf.urls.defaults import patterns, url
 
+# just import to activate listeners. Moved from __init__.py
+# due to circular imports
+import lfs_solr.listeners
+lfs_solr.listeners  # pyflakes
+
 from lfs_solr.utils import SOLR_ENABLED
 
 urlpatterns = patterns('lfs_solr.views',

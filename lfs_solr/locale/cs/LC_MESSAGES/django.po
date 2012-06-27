@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: lfs_solr\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-04-25 13:09+0200\n"
-"PO-Revision-Date: 2012-04-25 13:11+0100\n"
+"PO-Revision-Date: 2012-05-19 09:29+0100\n"
 "Last-Translator: Radim Novotny <novotny.radim@gmail.com>\n"
 "Language-Team: Czech <info@dms4u.cz>\n"
 "MIME-Version: 1.0\n"
@@ -38,5 +38,5 @@ msgstr "Název Z-A"
 
 #: templates/lfs/catalog/sorting.html:20
 msgid "Go!"
-msgstr "Provést"
+msgstr "Vyhledat"
 

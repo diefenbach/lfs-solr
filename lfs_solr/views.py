@@ -13,11 +13,11 @@ from django.core.paginator import Paginator, Page
 
 # lfs imports
 from lfs.catalog.models import Product
+from lfs.catalog.settings import SORTING_MAP
 from lfs.search import views as lfssearch_views
 
 # lfs_solr imports
 from lfs_solr.utils import _get_solr_connection
-from lfs_solr.utils import SOLR_ENABLED
 
 
 class SolrResults(object):
@@ -160,13 +160,21 @@ def search(request, template_name="lfs/search/search_results.html"):
         }
 
         # Sorting
-        sorting = request.session.get("sorting")
-        if sorting:
-            # check validity of sort param. The session may contain old non-solr value
-            if sorting.startswith('-') or ' ' not in sorting:
-                del request.session['sorting']
-            else:
+        sorting = ''
+        sorting_value = request.session.get("sorting")
+        if sorting_value:
+            # check validity of sort param.
+            # Since SOLR uses different sorting keys, we must find
+            # correct sorting key
+            # Example: session contains -price, we need to sort by 'price desc'
+            for item in SORTING_MAP:
+                if item['default'] == sorting_value:
+                    sorting = item.get('ftx')  # returns correct sort key
+                    break
+            if sorting:
                 params["sort"] = sorting
+            else:
+                del request.session['sorting']
 
         if request.session.has_key("solr_filter"):
             params["fq"] = []
@@ -229,7 +237,7 @@ def search(request, template_name="lfs/search/search_results.html"):
             "manufacturer_reset": "manufacturer" in request.session.get("solr_filter", []),
             "total": results.hits,
             "q": q,
-            "sorting": sorting,
+            "sorting": sorting_value,
             'paginator': paginator,
             'page_obj': page_obj,
         }))
