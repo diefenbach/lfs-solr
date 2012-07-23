@@ -1,4 +1,5 @@
 # coding: utf-8
+import re
 
 # django imports
 from django.contrib.auth.decorators import permission_required
@@ -18,6 +19,28 @@ from lfs.search import views as lfssearch_views
 
 # lfs_solr imports
 from lfs_solr.utils import _get_solr_connection
+
+
+# based on http://fragmentsofcode.wordpress.com/2010/03/10/escape-special-characters-for-solrlucene-query/
+# Solr/Lucene special characters: + - ! ( ) { } [ ] ^ " ~ * ? : \
+# There are also operators && and ||, but we're just going to escape
+# the individual ampersand and pipe chars.
+# Also, we're not going to escape backslashes!
+# http://lucene.apache.org/java/2_9_1/queryparsersyntax.html#Escaping+Special+Characters
+ESCAPE_CHARS_RE = re.compile(r'(?<!\\)(?P<char>[&|+\-!(){}\[\]^"~*?:])')
+
+
+def solr_escape(value):
+    r"""Escape un-escaped special characters and return escaped value.
+
+    >>> solr_escape(r'foo+') == r'foo\+'
+    True
+    >>> solr_escape(r'foo\+') == r'foo\+'
+    True
+    >>> solr_escape(r'foo\\+') == r'foo\\+'
+    True
+    """
+    return ESCAPE_CHARS_RE.sub(r'\\\g<char>', value)
 
 
 class SolrResults(object):
@@ -108,7 +131,7 @@ def livesearch(request, template_name="lfs/search/livesearch_results.html"):
           'rows': rows,
         }
 
-        results = conn.search(q.lower(), **params)
+        results = conn.search(solr_escape(q.lower()), **params)
 
         # Products
         products = []
@@ -181,7 +204,7 @@ def search(request, template_name="lfs/search/search_results.html"):
             for field, value in request.session["solr_filter"].items():
                 params["fq"].append("%s:%s" % (field.encode("utf-8"), value.encode("utf-8")))
 
-        results = conn.search(q.lower(), **params)
+        results = conn.search(solr_escape(q.lower()), **params)
 
         # Products
         products = []
