@@ -150,7 +150,7 @@ def livesearch(request, template_name="lfs/search/livesearch_results.html"):
             "products": products,
         })
 
-    return HttpResponse(result)
+    return HttpResponse(result, mimetype="application/json")
 
 
 def search(request, template_name="lfs/search/search_results.html"):
