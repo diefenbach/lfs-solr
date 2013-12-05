@@ -55,6 +55,8 @@ class SolrResults(object):
     def __getitem__(self, index):
         # since there is eg. 10 items in the list only,
         # we return particular item as it was on correct position
+        if index > self.total-1:
+            raise IndexError
         return self.objects[index % self.per_page]
 
 
