@@ -14,7 +14,6 @@ from django.core.paginator import Paginator, Page
 # lfs imports
 from lfs.catalog.models import Product
 from lfs.catalog.settings import SORTING_MAP
-from lfs.search import views as lfssearch_views
 
 # lfs_solr imports
 from lfs_solr.utils import _get_solr_connection
@@ -80,7 +79,7 @@ def set_filter(request):
     value = request.GET.get("value")
     q = request.GET.get("q")
 
-    if request.session.has_key("solr_filter") == False:
+    if "solr_filter" in request.session.keys() is False:
         request.session["solr_filter"] = {}
 
     solr_filter = request.session["solr_filter"]
@@ -105,7 +104,7 @@ def livesearch(request, template_name="lfs/search/livesearch_results.html"):
         conn = _get_solr_connection()
 
         params = {
-          'rows': rows,
+            'rows': rows,
         }
 
         results = conn.search(q.lower(), **params)
@@ -152,11 +151,11 @@ def search(request, template_name="lfs/search/search_results.html"):
         conn = _get_solr_connection()
 
         params = {
-          'facet': 'on',
-          'facet.field': ['categories', 'manufacturer'],
-          'facet.mincount': 1,
-          'rows': rows,
-          "start": (page - 1) * rows,
+            'facet': 'on',
+            'facet.field': ['categories', 'manufacturer'],
+            'facet.mincount': 1,
+            'rows': rows,
+            "start": (page - 1) * rows,
         }
 
         # Sorting
@@ -176,7 +175,7 @@ def search(request, template_name="lfs/search/search_results.html"):
             else:
                 del request.session['sorting']
 
-        if request.session.has_key("solr_filter"):
+        if "solr_filter" in request.session.keys():
             params["fq"] = []
             for field, value in request.session["solr_filter"].items():
                 params["fq"].append("%s:%s" % (field.encode("utf-8"), value.encode("utf-8")))
