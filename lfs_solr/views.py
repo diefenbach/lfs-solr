@@ -140,7 +140,7 @@ def search(request, template_name="lfs/search/search_results.html"):
         except KeyError:
             pass
 
-    rows = 10
+    rows = 1000
     q = request.GET.get("q")
 
     try:
