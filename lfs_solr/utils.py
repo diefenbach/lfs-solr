@@ -68,18 +68,20 @@ def index_all_products():
 def _index_products(products, delete=False):
     """Indexes given products.
     """
-    data = {
-        "delete": {
-            "query": "*:*"
+    import pdb; pdb.set_trace()
+    if delete:
+        data = {
+            "delete": {
+                "query": "*:*"
+            }
         }
-    }
 
-    requests.post(
-        SOLR_ADDRESS + "/update?commit=true",
-        headers={"content-type": "application/json"},
-        data=json.dumps(data),
-        auth=HTTPBasicAuth('admin', 'test')
-    )
+        requests.post(
+            SOLR_ADDRESS + "/update?commit=true",
+            headers={"content-type": "application/json"},
+            data=json.dumps(data),
+            auth=HTTPBasicAuth('admin', 'test')
+        )
 
     data = []
     for product in products:
