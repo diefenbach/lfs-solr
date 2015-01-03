@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import os
 
-version = '1.0b1'
+version = '1.1b1'
 
 here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.txt')).read()
@@ -27,7 +27,6 @@ setup(name='lfs-solr',
       include_package_data=True,
       zip_safe=False,
       install_requires=[
-        'setuptools',
-        'pysolr',
+          'setuptools',
       ],
       )

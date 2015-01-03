@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-from pysolr import Solr
+
+# python imports
+import json
+
+# django imports
 from django.conf import settings
 
 # lfs imports
@@ -8,25 +12,18 @@ from lfs.catalog.settings import STANDARD_PRODUCT
 from lfs.catalog.settings import PRODUCT_WITH_VARIANTS
 from lfs.catalog.settings import CONFIGURABLE_PRODUCT
 
-try:
-    SOLR_ADDRESS = settings.SOLR_ADDRESS
-except:
-    from lfs_solr.settings import SOLR_ADDRESS
+# requests imports
+import requests
+from requests.auth import HTTPBasicAuth
 
-try:
-    SOLR_ENABLED = settings.SOLR_ENABLED
-except:
-    from lfs_solr.settings import SOLR_ENABLED
+SOLR_ENABLED = settings.SOLR_ENABLED
+SOLR_ADDRESS = settings.SOLR_ADDRESS
+SOLR_USER = settings.SOLR_USER
+SOLR_PASSWORD = settings.SOLR_PASSWORD
 
 
 class SolrConfigurationException(Exception):
     """ Solr disabled """
-
-
-def _get_solr_connection():
-    if not SOLR_ENABLED:
-        raise SolrConfigurationException('SOLR is disabled')
-    return Solr(SOLR_ADDRESS)
 
 
 def index_product(product):
@@ -45,8 +42,18 @@ def index_product(product):
 def delete_product(product):
     """Deletes passed product from index.
     """
-    conn = _get_solr_connection()
-    conn.delete(id=product.id)
+    data = {
+        "delete": {
+            "query": "id:%s" % product.id
+        }
+    }
+
+    requests.post(
+        SOLR_ADDRESS + "/update?commit=true",
+        headers={"content-type": "application/json"},
+        data=json.dumps(data),
+        auth=HTTPBasicAuth(SOLR_USER, SOLR_PASSWORD)
+    )
 
 
 def index_all_products():
@@ -61,11 +68,20 @@ def index_all_products():
 def _index_products(products, delete=False):
     """Indexes given products.
     """
-    conn = _get_solr_connection()
-    if delete:
-        conn.delete(q='*:*')
+    data = {
+        "delete": {
+            "query": "*:*"
+        }
+    }
 
-    temp = []
+    requests.post(
+        SOLR_ADDRESS + "/update?commit=true",
+        headers={"content-type": "application/json"},
+        data=json.dumps(data),
+        auth=HTTPBasicAuth('admin', 'test')
+    )
+
+    data = []
     for product in products:
 
         # Just index the default variant of a "Product with Variants"
@@ -94,7 +110,7 @@ def _index_products(products, delete=False):
             # lfs 0.5
             price = product.get_price()
 
-        temp.append({
+        data.append({
             "id": product.id,
             "name": product.get_name(),
             "price": price,
@@ -105,4 +121,9 @@ def _index_products(products, delete=False):
             "description": product.description,
         })
 
-    conn.add(temp)
+    requests.post(
+        SOLR_ADDRESS + "/update?commit=true",
+        headers={"content-type": "application/json"},
+        data=json.dumps(data),
+        auth=HTTPBasicAuth('admin', 'test')
+    )

@@ -1,6 +1,11 @@
 # coding: utf-8
 
+# python imports
+import json
+
+
 # django imports
+from django.conf import settings
 from django.contrib.auth.decorators import permission_required
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
@@ -8,15 +13,20 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template.loader import render_to_string
 from django.template import RequestContext
-from django.utils import simplejson
 from django.core.paginator import Paginator, Page
 
 # lfs imports
 from lfs.catalog.models import Product
 from lfs.catalog.settings import SORTING_MAP
 
-# lfs_solr imports
-from lfs_solr.utils import _get_solr_connection
+# requests imports
+import requests
+from requests.auth import HTTPBasicAuth
+
+SOLR_ENABLED = settings.SOLR_ENABLED
+SOLR_ADDRESS = settings.SOLR_ADDRESS
+SOLR_USER = settings.SOLR_USER
+SOLR_PASSWORD = settings.SOLR_PASSWORD
 
 
 class SolrResults(object):
@@ -97,31 +107,39 @@ def livesearch(request, template_name="lfs/search/livesearch_results.html"):
     q = request.GET.get("q", "")
 
     if q == "":
-        result = simplejson.dumps({
+        result = json.dumps({
             "state": "failure",
         })
     else:
-        conn = _get_solr_connection()
-
         params = {
             'rows': rows,
+            'q': q,
+            'wt': "json",
         }
 
-        results = conn.search(q.lower(), **params)
+        result = requests.get(
+            SOLR_ADDRESS + "/select",
+            headers={"content-type": "application/json"},
+            auth=HTTPBasicAuth(SOLR_USER, SOLR_PASSWORD),
+            params=params,
+        )
+
+        content = json.loads(result.content)
+        docs = content["response"]["docs"]
 
         # Products
         products = []
-        for doc in results.docs:
+        for doc in docs:
             product = Product.objects.get(pk=doc["id"])
             products.append(product)
 
         products = render_to_string(template_name, RequestContext(request, {
             "products": products,
             "q": q,
-            "total": results.hits,
+            "total": content["response"]["numFound"],
         }))
 
-        result = simplejson.dumps({
+        result = json.dumps({
             "state": "success",
             "products": products,
         })
@@ -139,7 +157,7 @@ def search(request, template_name="lfs/search/search_results.html"):
         except KeyError:
             pass
 
-    rows = 1000
+    rows = 10
     q = request.GET.get("q")
 
     try:
@@ -148,14 +166,14 @@ def search(request, template_name="lfs/search/search_results.html"):
         page = 1
 
     if q:
-        conn = _get_solr_connection()
-
         params = {
             'facet': 'on',
             'facet.field': ['categories', 'manufacturer'],
             'facet.mincount': 1,
             'rows': rows,
             "start": (page - 1) * rows,
+            "q": q,
+            "wt": "json",
         }
 
         # Sorting
@@ -180,11 +198,19 @@ def search(request, template_name="lfs/search/search_results.html"):
             for field, value in request.session["solr_filter"].items():
                 params["fq"].append("%s:%s" % (field.encode("utf-8"), value.encode("utf-8")))
 
-        results = conn.search(q.lower(), **params)
+        result = requests.get(
+            SOLR_ADDRESS + "/select",
+            headers={"content-type": "application/json"},
+            auth=HTTPBasicAuth(SOLR_USER, SOLR_PASSWORD),
+            params=params,
+        )
+
+        content = json.loads(result.content)
+        docs = content["response"]["docs"]
 
         # Products
         products = []
-        for doc in results.docs:
+        for doc in docs:
             try:
                 product = Product.objects.get(pk=doc["id"])
             except Product.DoesNotExist:
@@ -192,11 +218,11 @@ def search(request, template_name="lfs/search/search_results.html"):
             else:
                 products.append(product)
 
-        fake_results = SolrResults(products, results.hits, rows)
+        fake_results = SolrResults(products, content["response"]["numFound"], rows)
 
         # Facets
         categories = []
-        temp = results.facets["facet_fields"]["categories"]
+        temp = content["facet_counts"]["facet_fields"]["categories"]
         for i in range(1, len(temp), 2):
             name = temp[i - 1]
             if name.find(" "):
@@ -210,7 +236,7 @@ def search(request, template_name="lfs/search/search_results.html"):
             })
 
         manufacturers = []
-        temp = results.facets["facet_fields"]["manufacturer"]
+        temp = content["facet_counts"]["facet_fields"]["manufacturer"]
         for i in range(1, len(temp), 2):
             name = temp[i - 1]
             if name:
@@ -229,12 +255,12 @@ def search(request, template_name="lfs/search/search_results.html"):
 
         return render_to_response(template_name, RequestContext(request, {
             "products": products,
-            "results": results,
+            "results": content,
             "categories": categories,
             "manufacturers": manufacturers,
             "categories_reset": "categories" in request.session.get("solr_filter", []),
             "manufacturer_reset": "manufacturer" in request.session.get("solr_filter", []),
-            "total": results.hits,
+            "total": content["response"]["numFound"],
             "q": q,
             "sorting": sorting_value,
             'paginator': paginator,
