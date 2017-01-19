@@ -68,7 +68,6 @@ def index_all_products():
 def _index_products(products, delete=False):
     """Indexes given products.
     """
-    import pdb; pdb.set_trace()
     if delete:
         data = {
             "delete": {
@@ -80,7 +79,7 @@ def _index_products(products, delete=False):
             SOLR_ADDRESS + "/update?commit=true",
             headers={"content-type": "application/json"},
             data=json.dumps(data),
-            auth=HTTPBasicAuth('admin', 'test')
+            auth=HTTPBasicAuth(SOLR_USER, SOLR_PASSWORD)
         )
 
     data = []
@@ -127,5 +126,5 @@ def _index_products(products, delete=False):
         SOLR_ADDRESS + "/update?commit=true",
         headers={"content-type": "application/json"},
         data=json.dumps(data),
-        auth=HTTPBasicAuth('admin', 'test')
+        auth=HTTPBasicAuth(SOLR_USER, SOLR_PASSWORD)
     )
