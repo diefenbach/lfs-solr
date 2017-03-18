@@ -1,10 +1,7 @@
 # coding: utf-8
 
-# python imports
 import json
 
-
-# django imports
 from django.conf import settings
 from django.contrib.auth.decorators import permission_required
 from django.core.urlresolvers import reverse
@@ -15,11 +12,9 @@ from django.template.loader import render_to_string
 from django.template import RequestContext
 from django.core.paginator import Paginator, Page
 
-# lfs imports
 from lfs.catalog.models import Product
 from lfs.catalog.settings import SORTING_MAP
 
-# requests imports
 import requests
 from requests.auth import HTTPBasicAuth
 
