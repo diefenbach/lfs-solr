@@ -1,5 +1,4 @@
 # coding: utf-8
-
 import json
 
 from django.conf import settings
@@ -7,7 +6,7 @@ from django.contrib.auth.decorators import permission_required
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.template import RequestContext
 from django.core.paginator import Paginator, Page
@@ -128,11 +127,11 @@ def livesearch(request, template_name="lfs/search/livesearch_results.html"):
             product = Product.objects.get(pk=doc["id"])
             products.append(product)
 
-        products = render_to_string(template_name, RequestContext(request, {
+        products = render_to_string(template_name, request=request, context={
             "products": products,
             "q": q,
             "total": content["response"]["numFound"],
-        }))
+        })
 
         result = json.dumps({
             "state": "success",
@@ -248,7 +247,7 @@ def search(request, template_name="lfs/search/search_results.html"):
         paginator = Paginator(fake_results, rows)
         page_obj = Page(fake_results, page, paginator)
 
-        return render_to_response(template_name, RequestContext(request, {
+        return render(request, template_name, {
             "products": products,
             "results": content,
             "categories": categories,
@@ -260,6 +259,6 @@ def search(request, template_name="lfs/search/search_results.html"):
             "sorting": sorting_value,
             'paginator': paginator,
             'page_obj': page_obj,
-        }))
+        })
     else:
-        return render_to_response(template_name, RequestContext(request, {}))
+        return render(request, template_name, {})
