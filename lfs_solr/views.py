@@ -3,16 +3,19 @@ import json
 
 from django.conf import settings
 from django.contrib.auth.decorators import permission_required
+from django.core.paginator import EmptyPage
+from django.core.paginator import InvalidPage
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.template.loader import render_to_string
-from django.template import RequestContext
-from django.core.paginator import Paginator, Page
+from django.core.paginator import Paginator
+from django.utils.translation import ungettext
 
 from lfs.catalog.models import Product
 from lfs.catalog.settings import SORTING_MAP
+from lfs.core.utils import lfs_pagination
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -35,7 +38,7 @@ class SolrResults(object):
     def __getitem__(self, index):
         # since there is eg. 10 items in the list only,
         # we return particular item as it was on correct position
-        return self.objects[index % self.per_page]
+        return self.objects[1]
 
 
 @permission_required("manage_shop", login_url="/login/")
@@ -155,7 +158,7 @@ def search(request, template_name="lfs/search/search_results.html"):
     q = request.GET.get("q")
 
     try:
-        page = int(request.GET.get("page", 1))
+        page = int(request.GET.get("start", 1))
     except ValueError:
         page = 1
 
@@ -245,7 +248,19 @@ def search(request, template_name="lfs/search/search_results.html"):
                 })
 
         paginator = Paginator(fake_results, rows)
-        page_obj = Page(fake_results, page, paginator)
+
+        try:
+            current_page = paginator.page(page)
+        except (EmptyPage, InvalidPage):
+            current_page = paginator.page(paginator.num_pages)
+
+        amount_of_products = content["response"]["numFound"]
+
+        # alculate urls
+        pagination_data = lfs_pagination(request, current_page, url=reverse('lfs_search'))
+        pagination_data['total_text'] = ungettext('%(count)d product',
+                                                  '%(count)d products',
+                                                  amount_of_products) % {'count': amount_of_products}
 
         return render(request, template_name, {
             "products": products,
@@ -257,8 +272,7 @@ def search(request, template_name="lfs/search/search_results.html"):
             "total": content["response"]["numFound"],
             "q": q,
             "sorting": sorting_value,
-            'paginator': paginator,
-            'page_obj': page_obj,
+            'pagination': pagination_data,
         })
     else:
         return render(request, template_name, {})
