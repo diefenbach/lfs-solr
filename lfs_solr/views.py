@@ -38,7 +38,10 @@ class SolrResults(object):
     def __getitem__(self, index):
         # since there is eg. 10 items in the list only,
         # we return particular item as it was on correct position
-        return self.objects[1]
+        try:
+            return self.objects[1]
+        except IndexError:
+            return None
 
 
 @permission_required("manage_shop", login_url="/login/")
