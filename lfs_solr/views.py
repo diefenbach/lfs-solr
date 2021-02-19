@@ -5,12 +5,12 @@ from django.conf import settings
 from django.contrib.auth.decorators import permission_required
 from django.core.paginator import EmptyPage
 from django.core.paginator import InvalidPage
-from django.core.urlresolvers import reverse
+from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.template.loader import render_to_string
-from django.core.paginator import Paginator
+from django.urls import reverse
 from django.utils.translation import ungettext
 
 from lfs.catalog.models import Product
