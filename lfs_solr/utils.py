@@ -23,12 +23,11 @@ SOLR_PASSWORD = settings.SOLR_PASSWORD
 
 
 class SolrConfigurationException(Exception):
-    """ Solr disabled """
+    """Solr disabled"""
 
 
 def index_product(product):
-    """Indexes passed product.
-    """
+    """Indexes passed product."""
     if product.is_variant():
         try:
             product = product.parent.get_default_variant()
@@ -40,51 +39,40 @@ def index_product(product):
 
 
 def delete_product(product):
-    """Deletes passed product from index.
-    """
-    data = {
-        "delete": {
-            "query": "id:%s" % product.id
-        }
-    }
+    """Deletes passed product from index."""
+    data = {"delete": {"query": "id:%s" % product.id}}
 
     requests.post(
         SOLR_ADDRESS + "/update?commit=true",
         headers={"content-type": "application/json"},
         data=json.dumps(data),
-        auth=HTTPBasicAuth(SOLR_USER, SOLR_PASSWORD)
+        auth=HTTPBasicAuth(SOLR_USER, SOLR_PASSWORD),
     )
 
 
 def index_all_products():
-    """Indexes all products.
-    """
+    """Indexes all products."""
     products = Product.objects.filter(
-        active=True, sub_type__in=(STANDARD_PRODUCT, PRODUCT_WITH_VARIANTS, CONFIGURABLE_PRODUCT))
+        active=True, sub_type__in=(STANDARD_PRODUCT, PRODUCT_WITH_VARIANTS, CONFIGURABLE_PRODUCT)
+    )
 
     _index_products(products, delete=True)
 
 
 def _index_products(products, delete=False):
-    """Indexes given products.
-    """
+    """Indexes given products."""
     if delete:
-        data = {
-            "delete": {
-                "query": "*:*"
-            }
-        }
+        data = {"delete": {"query": "*:*"}}
 
         requests.post(
             SOLR_ADDRESS + "/update?commit=true",
             headers={"content-type": "application/json"},
             data=json.dumps(data),
-            auth=HTTPBasicAuth(SOLR_USER, SOLR_PASSWORD)
+            auth=HTTPBasicAuth(SOLR_USER, SOLR_PASSWORD),
         )
 
     data = []
     for product in products:
-
         # Just index the default variant of a "Product with Variants"
         if product.is_product_with_variants():
             product = product.get_default_variant()
@@ -111,20 +99,22 @@ def _index_products(products, delete=False):
             # lfs 0.5
             price = product.get_price()
 
-        data.append({
-            "id": product.id,
-            "name": product.get_name(),
-            "price": price,
-            "categories": categories,
-            "keywords": product.get_meta_keywords(),
-            "manufacturer": manufacturer_name,
-            "sku_manufacturer": product.sku_manufacturer,
-            "description": product.description,
-        })
+        data.append(
+            {
+                "id": product.id,
+                "name": product.get_name(),
+                "price": price,
+                "categories": categories,
+                "keywords": product.get_meta_keywords(),
+                "manufacturer": manufacturer_name,
+                "sku_manufacturer": product.sku_manufacturer,
+                "description": product.description,
+            }
+        )
 
     requests.post(
         SOLR_ADDRESS + "/update?commit=true",
         headers={"content-type": "application/json"},
         data=json.dumps(data),
-        auth=HTTPBasicAuth(SOLR_USER, SOLR_PASSWORD)
+        auth=HTTPBasicAuth(SOLR_USER, SOLR_PASSWORD),
     )

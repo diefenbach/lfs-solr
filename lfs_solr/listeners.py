@@ -14,6 +14,8 @@ from lfs_solr.utils import SOLR_ENABLED
 def product_deleted_listener(sender, instance, **kwargs):
     if SOLR_ENABLED:
         delete_product(instance)
+
+
 post_delete.connect(product_deleted_listener, sender=Product)
 
 
@@ -23,4 +25,6 @@ def product_saved_listener(sender, instance, **kwargs):
             index_product(instance)
         else:
             delete_product(instance)
+
+
 post_save.connect(product_saved_listener, sender=Product)

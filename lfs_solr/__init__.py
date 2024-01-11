@@ -1,1 +1,1 @@
-default_app_config = 'lfs_solr.apps.AppConfig'
+default_app_config = "lfs_solr.apps.AppConfig"
