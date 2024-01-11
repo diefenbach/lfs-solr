@@ -5,13 +5,13 @@ from django.conf import settings
 from django.contrib.auth.decorators import permission_required
 from django.core.paginator import EmptyPage
 from django.core.paginator import InvalidPage
-from django.core.paginator import Paginator
+from django.urls import reverse
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.template.loader import render_to_string
-from django.urls import reverse
-from django.utils.translation import ungettext
+from django.core.paginator import Paginator
+from django.utils.translation import ngettext
 
 from lfs.catalog.models import Product
 from lfs.catalog.settings import SORTING_MAP
@@ -46,17 +46,16 @@ class SolrResults(object):
 
 @permission_required("manage_shop", login_url="/login/")
 def index_products(request):
-    """Indexes full all products.
-    """
+    """Indexes full all products."""
     from lfs_solr.utils import index_all_products
+
     index_all_products()
 
     return HttpResponse("Done!")
 
 
 def reset_field(request):
-    """Resets filter for given field.
-    """
+    """Resets filter for given field."""
     q = request.GET.get("q")
     field = request.GET.get("field")
     try:
@@ -71,8 +70,7 @@ def reset_field(request):
 
 
 def reset_filter(request):
-    """Resets all filters.
-    """
+    """Resets all filters."""
     q = request.GET.get("q")
     try:
         del request.session["solr_filter"]
@@ -83,8 +81,7 @@ def reset_filter(request):
 
 
 def set_filter(request):
-    """Saves the filter for given field to current session.
-    """
+    """Saves the filter for given field to current session."""
     field = request.GET.get("field")
     value = request.GET.get("value")
     q = request.GET.get("q")
@@ -100,21 +97,22 @@ def set_filter(request):
 
 
 def livesearch(request, template_name="lfs/search/livesearch_results.html"):
-    """Renders the results for the live search.
-    """
+    """Renders the results for the live search."""
     # if not SOLR_ENABLED, urls.py does not call this view
     rows = 10
     q = request.GET.get("q", "")
 
     if q == "":
-        result = json.dumps({
-            "state": "failure",
-        })
+        result = json.dumps(
+            {
+                "state": "failure",
+            }
+        )
     else:
         params = {
-            'rows': rows,
-            'q': q,
-            'wt': "json",
+            "rows": rows,
+            "q": q,
+            "wt": "json",
         }
 
         result = requests.get(
@@ -133,23 +131,28 @@ def livesearch(request, template_name="lfs/search/livesearch_results.html"):
             product = Product.objects.get(pk=doc["id"])
             products.append(product)
 
-        products = render_to_string(template_name, request=request, context={
-            "products": products,
-            "q": q,
-            "total": content["response"]["numFound"],
-        })
+        products = render_to_string(
+            template_name,
+            request=request,
+            context={
+                "products": products,
+                "q": q,
+                "total": content["response"]["numFound"],
+            },
+        )
 
-        result = json.dumps({
-            "state": "success",
-            "products": products,
-        })
+        result = json.dumps(
+            {
+                "state": "success",
+                "products": products,
+            }
+        )
 
     return HttpResponse(result)
 
 
 def search(request, template_name="lfs/search/search_results.html"):
-    """Provides form and result for search via Solr.
-    """
+    """Provides form and result for search via Solr."""
     # if not SOLR_ENABLED, urls.py does not call this view
     if request.GET.get("reset") or request.GET.get("livesearch"):
         try:
@@ -167,17 +170,17 @@ def search(request, template_name="lfs/search/search_results.html"):
 
     if q:
         params = {
-            'facet': 'on',
-            'facet.field': ['categories', 'manufacturer'],
-            'facet.mincount': 1,
-            'rows': rows,
+            "facet": "on",
+            "facet.field": ["categories", "manufacturer"],
+            "facet.mincount": 1,
+            "rows": rows,
             "start": (page - 1) * rows,
             "q": q,
             "wt": "json",
         }
 
         # Sorting
-        sorting = ''
+        sorting = ""
         sorting_value = request.session.get("sorting")
         if sorting_value:
             # check validity of sort param.
@@ -185,13 +188,13 @@ def search(request, template_name="lfs/search/search_results.html"):
             # correct sorting key
             # Example: session contains -price, we need to sort by 'price desc'
             for item in SORTING_MAP:
-                if item['default'] == sorting_value:
-                    sorting = item.get('ftx')  # returns correct sort key
+                if item["default"] == sorting_value:
+                    sorting = item.get("ftx")  # returns correct sort key
                     break
             if sorting:
                 params["sort"] = sorting
             else:
-                del request.session['sorting']
+                del request.session["sorting"]
 
         if "solr_filter" in request.session.keys():
             params["fq"] = []
@@ -229,11 +232,13 @@ def search(request, template_name="lfs/search/search_results.html"):
                 url = '"%s"' % name
             else:
                 url = name
-            categories.append({
-                "url": url,
-                "name": name,
-                "amount": temp[i],
-            })
+            categories.append(
+                {
+                    "url": url,
+                    "name": name,
+                    "amount": temp[i],
+                }
+            )
 
         manufacturers = []
         temp = content["facet_counts"]["facet_fields"]["manufacturer"]
@@ -244,11 +249,13 @@ def search(request, template_name="lfs/search/search_results.html"):
                     url = '"%s"' % name
                 else:
                     url = name
-                manufacturers.append({
-                    "url": url,
-                    "name": name,
-                    "amount": temp[i],
-                })
+                manufacturers.append(
+                    {
+                        "url": url,
+                        "name": name,
+                        "amount": temp[i],
+                    }
+                )
 
         paginator = Paginator(fake_results, rows)
 
@@ -260,22 +267,26 @@ def search(request, template_name="lfs/search/search_results.html"):
         amount_of_products = content["response"]["numFound"]
 
         # alculate urls
-        pagination_data = lfs_pagination(request, current_page, url=reverse('lfs_search'))
-        pagination_data['total_text'] = ungettext('%(count)d product',
-                                                  '%(count)d products',
-                                                  amount_of_products) % {'count': amount_of_products}
+        pagination_data = lfs_pagination(request, current_page, url=reverse("lfs_search"))
+        pagination_data["total_text"] = ngettext("%(count)d product", "%(count)d products", amount_of_products) % {
+            "count": amount_of_products
+        }
 
-        return render(request, template_name, {
-            "products": products,
-            "results": content,
-            "categories": categories,
-            "manufacturers": manufacturers,
-            "categories_reset": "categories" in request.session.get("solr_filter", []),
-            "manufacturer_reset": "manufacturer" in request.session.get("solr_filter", []),
-            "total": content["response"]["numFound"],
-            "q": q,
-            "sorting": sorting_value,
-            'pagination': pagination_data,
-        })
+        return render(
+            request,
+            template_name,
+            {
+                "products": products,
+                "results": content,
+                "categories": categories,
+                "manufacturers": manufacturers,
+                "categories_reset": "categories" in request.session.get("solr_filter", []),
+                "manufacturer_reset": "manufacturer" in request.session.get("solr_filter", []),
+                "total": content["response"]["numFound"],
+                "q": q,
+                "sorting": sorting_value,
+                "pagination": pagination_data,
+            },
+        )
     else:
         return render(request, template_name, {})
